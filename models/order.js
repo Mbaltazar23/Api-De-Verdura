@@ -7,17 +7,20 @@ Order.create = (order, result) => {
       INSERT INTO orders(
         id_client,
         id_address,
+        lat,
+        lng,
         status,
         timestamp,
         created_at,
         updated_at
-    )  VALUES(?,?,?,?,?,?) 
+    )  VALUES(?,?,?,?,?,?,?,?)`;
 
-    `;
     db.query(sql, [
         order.id_client,
         order.id_address,
-        "PAGADO", // 1. PAGADO  2. DESPACHADO  3. EN CAMINO  4. ENTREGADO
+        order.lat,
+        order.lng,
+        "PAGADO", // 1. PAGADO  2. DESPACHADO  3. ENTREGADO
         Date.now(),
         new Date(),
         new Date(),
@@ -37,7 +40,6 @@ Order.findByStatus = (status, result) => {
 CONVERT(O.id,char) AS id,
 CONVERT(O.id_client,char) AS id_client,
 CONVERT(O.id_address,char) AS id_address,
-CONVERT(O.id_delivery,char) AS id_delivery,
 O.status,
 O.timestamp,
 JSON_OBJECT(
@@ -54,21 +56,12 @@ JSON_OBJECT(
    'image', U.image,
    'phone', U.phone
 ) AS client,
-JSON_OBJECT(
-  'id', CONVERT(U2.id, char),
-  'name', U2.name,
-  'lastname', U2.lastname,
-  'image', U2.image,
-  'phone', U2.phone
-) AS delivery,
 JSON_ARRAYAGG(
        JSON_OBJECT(
            'id', CONVERT(P.id, char),
            'name', P.name,
            'description', P.description, 
-           'image1', P.image1,
-           'image2', P.image2,
-           'image3', P.image3,
+           'image', P.image,
            'price', P.price,
            'quantity', OHP.quantity
        )
@@ -79,10 +72,6 @@ INNER JOIN
 users AS U
 ON
 U.id = O.id_client
-LEFT JOIN
-users AS U2
-ON
-U2.id = O.id_delivery
 INNER JOIN 
 address AS A
 ON 
@@ -116,7 +105,6 @@ Order.findByDeliveryAndStatus = (id_delivery, status, result) => {
 CONVERT(O.id,char) AS id,
 CONVERT(O.id_client,char) AS id_client,
 CONVERT(O.id_address,char) AS id_address,
-CONVERT(O.id_delivery,char) AS id_delivery,
 O.status,
 O.timestamp,
 JSON_OBJECT(
@@ -133,21 +121,12 @@ JSON_OBJECT(
    'image', U.image,
    'phone', U.phone
 ) AS client,
-JSON_OBJECT(
-  'id', CONVERT(U2.id, char),
-  'name', U2.name,
-  'lastname', U2.lastname,
-  'image', U2.image,
-  'phone', U2.phone
-) AS delivery,
 JSON_ARRAYAGG(
        JSON_OBJECT(
            'id', CONVERT(P.id, char),
            'name', P.name,
            'description', P.description, 
-           'image1', P.image1,
-           'image2', P.image2,
-           'image3', P.image3,
+           'image', P.image,
            'price', P.price,
            'quantity', OHP.quantity
        )
@@ -158,10 +137,6 @@ INNER JOIN
 users AS U
 ON
 U.id = O.id_client
-LEFT JOIN
-users AS U2
-ON
-U2.id = O.id_delivery
 INNER JOIN 
 address AS A
 ON 
@@ -174,8 +149,7 @@ INNER JOIN
 products AS P
 ON
 P.id = OHP.id_product
-WHERE 
-O.id_delivery = ? AND O.status = ?  
+WHERE O.status = ?  
 GROUP BY O.id`;
 
     db.query(sql, [
@@ -197,7 +171,6 @@ Order.findByClientAndStatus = (id_client, status, result) => {
 CONVERT(O.id,char) AS id,
 CONVERT(O.id_client,char) AS id_client,
 CONVERT(O.id_address,char) AS id_address,
-CONVERT(O.id_delivery,char) AS id_delivery,
 O.status,
 O.timestamp,
 JSON_OBJECT(
@@ -214,21 +187,12 @@ JSON_OBJECT(
    'image', U.image,
    'phone', U.phone
 ) AS client,
-JSON_OBJECT(
-  'id', CONVERT(U2.id, char),
-  'name', U2.name,
-  'lastname', U2.lastname,
-  'image', U2.image,
-  'phone', U2.phone
-) AS delivery,
 JSON_ARRAYAGG(
        JSON_OBJECT(
            'id', CONVERT(P.id, char),
            'name', P.name,
            'description', P.description, 
-           'image1', P.image1,
-           'image2', P.image2,
-           'image3', P.image3,
+           'image', P.image,
            'price', P.price,
            'quantity', OHP.quantity
        )
@@ -239,10 +203,6 @@ INNER JOIN
 users AS U
 ON
 U.id = O.id_client
-LEFT JOIN
-users AS U2
-ON
-U2.id = O.id_delivery
 INNER JOIN 
 address AS A
 ON 
@@ -273,19 +233,18 @@ GROUP BY O.id`;
 };
 
 
-Order.updateToDispatched = (id_order, id_delivery, result) => {
+Order.updateToDispatched = (id_order, result) => {
     const sql = `
   UPDATE
        orders 
   SET 
-     id_delivery = ?,
      status = ?,
      updated_at = ?
   WHERE 
       id = ?`;
 
     db.query(sql, [
-        id_delivery, "DESPACHADO", new Date(), id_order
+        "DESPACHADO", new Date(), id_order
     ], (err, res) => {
         if (err) {
             console.log("Error : ", err);
@@ -298,43 +257,18 @@ Order.updateToDispatched = (id_order, id_delivery, result) => {
 };
 
 
-Order.updateToOnTheWay = (id_order, id_delivery, result) => {
+Order.updateToDelivered = (id_order, result) => {
     const sql = `
   UPDATE
        orders 
   SET 
-     id_delivery = ?,
      status = ?,
      updated_at = ?
   WHERE 
       id = ?`;
 
     db.query(sql, [
-        id_delivery, "EN CAMINO", new Date(), id_order
-    ], (err, res) => {
-        if (err) {
-            console.log("Error : ", err);
-            result(err, null);
-        } else {
-            console.log("Id de la Orden actualizada : ", res.insertId);
-            result(null, id_order);
-        }
-    });
-};
-
-Order.updateToDelivered = (id_order, id_delivery, result) => {
-    const sql = `
-  UPDATE
-       orders 
-  SET 
-     id_delivery = ?,
-     status = ?,
-     updated_at = ?
-  WHERE 
-      id = ?`;
-
-    db.query(sql, [
-        id_delivery, "ENTREGADO", new Date(), id_order
+        "ENTREGADO", new Date(), id_order
     ], (err, res) => {
         if (err) {
             console.log("Error : ", err);

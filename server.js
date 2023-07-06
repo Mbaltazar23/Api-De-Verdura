@@ -15,16 +15,13 @@ const categoriesRoutes = require("./routes/categoryRoutes");
 const productsRoutes = require("./routes/productRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const favoriteRoutes = require("./routes/favoriteRoutes")
 
 const port = process.env.PORT || 3000;
 
 app.use(logger("dev"));
 app.use(express.json());
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
+app.use(express.urlencoded({extended: true}));
 
 app.use(cors());
 app.use(passport.initialize());
@@ -36,41 +33,41 @@ app.disable("x-powered-by");
 
 app.set("port", port);
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-});
+const upload = multer({storage: multer.memoryStorage()});
+
 /*
  * Llamado a las rutas
  */
-
 usersRoutes(app, upload);
 categoriesRoutes(app, upload);
 productsRoutes(app, upload);
 addressRoutes(app);
 orderRoutes(app);
+favoriteRoutes(app)
+
 /*
  * Configuracion del Servidor
  
  URL Inicial : 192.168.1.88
 
- configuracion listen : "192.168.1.88" || "localhost"
+ configuracion en local : "192.168.1.88" || "localhost"
+ configuracion en web: quitar la ip y su localhost y mantener el puerto 3000
  */
-
- server.listen(3000,"192.168.1.88" || "localhost", function () {
+server.listen(3000, "192.168.1.88" || "localhost", function () {
     console.log("Aplicacion de Node js " + port + " Iniciada...");
-  });
-  
-  app.get("/", (req, res) => {
+});
+
+app.get("/", (req, res) => {
     res.send("De Verdura - Ruta raiz");
-  });
-  
-  app.get("/test", (req, res) => {
+});
+
+app.get("/test", (req, res) => {
     res.send("Ruta test");
-  });
-  
-  // Error handler
-  
-  app.use((err, req, res, next) => {
+});
+
+// Error handler
+
+app.use((err, req, res, next) => {
     console.log(err);
     res.status(err.status || 500).send(err.stack);
-  });
+});

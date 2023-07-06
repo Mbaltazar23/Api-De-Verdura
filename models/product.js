@@ -24,6 +24,52 @@ Product.findByCategory = (id_category, result) => {
     });
 };
 
+Product.findByName = (name, result) => {
+    const sql = `
+      SELECT 
+        P.id,
+        P.name, 
+        P.description,
+        P.price,
+        P.image,
+        P.id_category 
+      FROM products as P 
+      WHERE P.name LIKE ?`;
+  
+    db.query(sql, [`%${name}%`], (err, data) => {
+      if (err) {
+        console.log("Error: ", err);
+        result(err, null);
+      } else {
+        console.log("Products: ", data);
+        result(null, data);
+      }
+    });
+};
+
+Product.findProductsFilterNameAll = (id_category, id_product, result) => {
+    const sql = `
+      SELECT 
+        P.id,
+        P.name, 
+        P.description,
+        P.price,
+        P.image,
+        P.id_category 
+      FROM products as P 
+      WHERE P.id_category = ? AND P.id != ?`;
+  
+    db.query(sql, [id_category, id_product], (err, data) => {
+      if (err) {
+        console.log("Error: ", err);
+        result(err, null);
+      } else {
+        console.log("Products filters : ", data);
+        result(null, data);
+      }
+    });
+  };
+
 Product.create = (product, result) => {
     const sql = `
   INSERT INTO

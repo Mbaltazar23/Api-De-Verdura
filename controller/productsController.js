@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const storage = require("../utils/cloud_storage");
 
 module.exports = {
+
   async findByCategory(req, res) {
     const id_category = req.params.id_category;
 
@@ -10,6 +11,37 @@ module.exports = {
         return res.status(501).json({
           success: false,
           message: "Hubo un error al listar los productos",
+          error: err,
+        });
+      }
+      return res.status(201).json(data);
+    });
+  },
+
+  async findByName(req, res) {
+    const name = req.params.name;
+    
+    Product.findByName(name, (err, data) => {
+      if (err) {
+        return res.status(501).json({
+          success: false,
+          message: "Hubo un error al listar los productos",
+          error: err,
+        });
+      }
+      return res.status(201).json(data);
+    });
+  },
+
+  async findAllProductsFilterNotName(req, res) {
+    const id_category = req.params.id_category;
+    const id_product = req.params.id_product;
+
+    Product.findProductsFilterNameAll(id_category,id_product, (err, data) => {
+      if (err) {
+        return res.status(501).json({
+          success: false,
+          message: "Hubo un error al listar los productos asociados",
           error: err,
         });
       }

@@ -92,14 +92,14 @@ module.exports = {
       if (err) {
         return res.status(501).json({
           success: false,
-          message: "Hubo un error al momento de eliminar la categoria",
+          message: "Hubo un error al momento de eliminar la direccion",
           error: err,
         });
       }
 
       return res.status(201).json({
         success: true,
-        message: "La categoria se elimino correctamente",
+        message: "La direccion se elimino correctamente",
         data: `${id}`, //El ID del nuevo usuario
       });
     });
